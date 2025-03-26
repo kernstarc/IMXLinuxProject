@@ -1,11 +1,15 @@
 #
 # SPDX-License-Identifier:	GPL-2.0+
 #
-
+# 主版本号
 VERSION = 2016
+# 补丁版本号
 PATCHLEVEL = 03
+# 次版本号
 SUBLEVEL =
+# 附加版本信息
 EXTRAVERSION =
+# 名字相关
 NAME =
 
 # *DOCUMENTATION*
@@ -17,6 +21,10 @@ NAME =
 # o Do not use make's built-in rules and variables
 #   (this increases performance and avoids hard-to-debug behaviour);
 # o Look for make include files relative to root of kernel src
+# $(MAKE) -C subdir 编译子目录文件夹
+# MAKEFLAGS会始终将变量传递给子make变量，除非使用unexport
+# -rR表示禁止使用内置的隐含规则和变量定义
+# --include-dir指明搜索路径
 MAKEFLAGS += -rR --include-dir=$(CURDIR)
 
 # Avoid funny character set dependencies
@@ -69,7 +77,8 @@ unexport GREP_OPTIONS
 #
 # To put more focus on warnings, be less verbose as default
 # Use 'make V=1' to see the full commands
-
+# 命令输出的编译设置
+# $(origin V)返回值就是变量来源,如果变量V是在命令行定义的那么它的来源就是"command line"
 ifeq ("$(origin V)", "command line")
   KBUILD_VERBOSE = $(V)
 endif
@@ -77,6 +86,7 @@ ifndef KBUILD_VERBOSE
   KBUILD_VERBOSE = 0
 endif
 
+# 变量 quiet 和 Q 来控制编译的时候是否在终端输出完整的命令
 ifeq ($(KBUILD_VERBOSE),1)
   quiet =
   Q =
@@ -87,7 +97,10 @@ endif
 
 # If the user is running make -s (silent mode), suppress echoing of
 # commands
-
+# make -s设置编译静默输出
+# filter函数表示以pattern模式过滤text字符串中的单词，仅保留符合模式pattern的单词
+# firstword 是获取首单词
+# %s 表示已 s结尾
 ifneq ($(filter 4.%,$(MAKE_VERSION)),)	# make-4
 ifneq ($(filter %s ,$(firstword x$(MAKEFLAGS))),)
   quiet=silent_
@@ -99,6 +112,15 @@ endif
 endif
 
 export quiet Q KBUILD_VERBOSE
+
+#mytest:
+#	@echo 'firstworld=' $(firstword x$(MAKEFLAGS))
+#	@echo 'filter=' $(filter %s ,$(firstword x$(MAKEFLAGS)))
+
+#$(info “here add the debug info”)
+#$(warning “here add the debug info”)
+#$(error “error: this will stop the compile”)
+#exit 0
 
 # kbuild supports saving output files in a separate directory.
 # To locate output files in a separate directory two syntaxes are supported.
@@ -246,6 +268,10 @@ ifeq ($(HOSTARCH),$(ARCH))
 CROSS_COMPILE ?=
 endif
 
+ARCH ?= arm
+CROSS_COMPILE ?= arm-linux-gnueabihf-
+
+# .config 默认是没有的，需要使用命令“make xxx_defconfig”生成
 KCONFIG_CONFIG	?= .config
 export KCONFIG_CONFIG
 
@@ -392,6 +418,13 @@ export RCS_TAR_IGNORE := --exclude SCCS --exclude BitKeeper --exclude .svn \
 # Rules shared between *config targets and build targets
 
 # Basic helpers built in scripts/
+# Q=@或为空    MAKE=make    
+# 变量 build 是在 scripts/Kbuild.include 文件中有定义
+# build=-f $(srctree)/scripts/Makefile.build obj
+# 因为$(srctree) 为 “.”   则 build=-f ./scripts/Makefile.build obj
+# scripts_basic:
+# 	@make -f ./scripts/Makefile.build obj=scripts/basic //也可以没有@，视配置而定
+# 	@rm -f . tmp_quiet_recordmcount 					//也可以没有@
 PHONY += scripts_basic
 scripts_basic:
 	$(Q)$(MAKE) $(build)=scripts/basic
@@ -430,21 +463,28 @@ config-targets := 0
 mixed-targets  := 0
 dot-config     := 1
 
+# filter过滤后不为空，所以条件不成立
 ifneq ($(filter $(no-dot-config-targets), $(MAKECMDGOALS)),)
 	ifeq ($(filter-out $(no-dot-config-targets), $(MAKECMDGOALS)),)
 		dot-config := 0
 	endif
 endif
 
+# ifneq ($(filter config %config,$(MAKECMDGOALS)),) 条件成立
 ifeq ($(KBUILD_EXTMOD),)
         ifneq ($(filter config %config,$(MAKECMDGOALS)),)
                 config-targets := 1
+				# words 函数来统计单词个数。 MAKECMDGOALS的单词个数是1个，所以条件不成立
                 ifneq ($(words $(MAKECMDGOALS)),1)
                         mixed-targets := 1
                 endif
         endif
 endif
 
+# 综上所述 
+# config-targets = 1
+# mixed-targets = 0
+# dot-config = 1
 ifeq ($(mixed-targets),1)
 # ===========================================================================
 # We're called with mixed targets (*config and build targets).
@@ -470,9 +510,16 @@ ifeq ($(config-targets),1)
 KBUILD_DEFCONFIG := sandbox_defconfig
 export KBUILD_DEFCONFIG KBUILD_KCONFIG
 
+# 没有目标与之匹配，所以不执行
 config: scripts_basic outputmakefile FORCE
 	$(Q)$(MAKE) $(build)=scripts/kconfig $@
 
+# 有目标与之匹配，当输入“make xxx_defconfig”的时候就会匹配到 %config 目标
+# 目标“%config”依赖于 scripts_basic、outputmakefile 和 FORCE
+# FORCE 是没有规则和依赖的，所以每次都会重新生成 FORCE
+# 只有KBUILD_SRC不为空时outputmakefile才有意义，但经过前面的分析KBUILD_SRC为空，所以outputmakefile无效
+# 只有 scripts_basic 是有效的
+# 命令展开为@make -f ./scripts/Makefile.build obj=scripts/kconfig xxx_defconfig
 %config: scripts_basic outputmakefile FORCE
 	$(Q)$(MAKE) $(build)=scripts/kconfig $@
 
