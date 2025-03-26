@@ -4,14 +4,18 @@
 #
 # SPDX-License-Identifier:	GPL-2.0
 #
-
+# patsubst 是替换函数
 # Modified for U-Boot
 prefix := tpl
+# scripts/basic”没有“tpl/”，所以 src = scripts/basic
 src := $(patsubst $(prefix)/%,%,$(obj))
+# 条件成立
 ifeq ($(obj),$(src))
 prefix := spl
+# src 继续为 scripts/basic
 src := $(patsubst $(prefix)/%,%,$(obj))
 ifeq ($(obj),$(src))
+# 条件成立
 prefix := .
 endif
 endif
@@ -54,8 +58,13 @@ include scripts/Kbuild.include
 save-cflags := $(CFLAGS)
 
 # The filename Kbuild has precedence over Makefile
+# kbuild-dir展开为$(if $(filter /%, scripts/basic), scripts/basic, ./scripts/basic)
+# 因为没有以“/”为开头的单词，所以$(filter /%, scripts/basic)的结果为空，kbuild-dir=./scripts/basic
 kbuild-dir := $(if $(filter /%,$(src)),$(src),$(srctree)/$(src))
+# kbuild-file展开为：$(if $(wildcard ./scripts/basic/Kbuild), ./scripts/basic/Kbuild, ./scripts/basic/Makefile)
+# 因为 scrpts/basic 目录中没有 Kbuild 这个文件，所以 kbuild-file= ./scripts/basic/Makefile
 kbuild-file := $(if $(wildcard $(kbuild-dir)/Kbuild),$(kbuild-dir)/Kbuild,$(kbuild-dir)/Makefile)
+# 展开为include ./scripts/basic/Makefile
 include $(kbuild-file)
 
 # Added for U-Boot
@@ -112,7 +121,11 @@ endif
 modorder-target := $(obj)/modules.order
 
 # We keep a list of all modules in $(MODVERDIR)
-
+# __build是默认目标。在顶层 Makefile 中，KBUILD_BUILTIN 为 1，KBUILD_MODULES 为 0
+# 因此展开后为：__build:$(builtin-target) $(lib-target) $(extra-y)) $(subdir-ym) $(always)
+# 从而可以看出目标__build 有 5 个依赖，其中只有 always 有效。最终 __build: scripts/basic/fixdep
+# 所以要先编译 scripts/basic/fixdep.c，生成 fixdep，前面已经读取了 scripts/basic/Makefile 文件include ./scripts/basic/Makefile
+# 综上所述，scripts_basic 目标的作用就是编译出 scripts/basic/fixdep 这个软件
 __build: $(if $(KBUILD_BUILTIN),$(builtin-target) $(lib-target) $(extra-y)) \
 	 $(if $(KBUILD_MODULES),$(obj-m) $(modorder-target)) \
 	 $(subdir-ym) $(always)

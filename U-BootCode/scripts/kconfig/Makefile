@@ -110,6 +110,9 @@ else
 	$(Q)$< $(silent) --defconfig=arch/$(SRCARCH)/configs/$(KBUILD_DEFCONFIG) $(Kconfig)
 endif
 
+# 和输入的 xxx_defconfig 匹配。 $(obj)/conf展开后就是 scripts/kconfig/conf
+# 展开后就是 @scripts/kconfig/conf --defconfig=arch/../configs/xxx_defconfig Kconfig
+# 这里会将mx6ull_alientek_emmc_defconfig 中的配置输出到.config 文件中
 %_defconfig: $(obj)/conf
 	$(Q)$< $(silent) --defconfig=arch/$(SRCARCH)/configs/$@ $(Kconfig)
 
