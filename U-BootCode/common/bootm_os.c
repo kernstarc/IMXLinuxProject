@@ -435,7 +435,7 @@ static int do_bootm_openrtos(int flag, int argc, char * const argv[],
 static boot_os_fn *boot_os[] = {
 	[IH_OS_U_BOOT] = do_bootm_standalone,
 #ifdef CONFIG_BOOTM_LINUX
-	[IH_OS_LINUX] = do_bootm_linux,
+	[IH_OS_LINUX] = do_bootm_linux,		// Linux 系统对应的启动函数, arch/arm/lib/bootm.c
 #endif
 #ifdef CONFIG_BOOTM_NETBSD
 	[IH_OS_NETBSD] = do_bootm_netbsd,
@@ -477,7 +477,7 @@ int boot_selected_os(int argc, char * const argv[], int state,
 		     bootm_headers_t *images, boot_os_fn *boot_fn)
 {
 	arch_preboot_os();
-	boot_fn(state, argc, argv, images);
+	boot_fn(state, argc, argv, images);		// 也就是 do_bootm_linux 函数来启动 Linux 内核
 
 	/* Stand-alone may return when 'autostart' is 'no' */
 	if (images->os.type == IH_TYPE_STANDALONE ||
@@ -506,5 +506,5 @@ boot_os_fn *bootm_os_get_boot_func(int os)
 		relocated = true;
 	}
 #endif
-	return boot_os[os];
+	return boot_os[os];	// 这个数组里面存放着不同的系统对应的启动函数
 }

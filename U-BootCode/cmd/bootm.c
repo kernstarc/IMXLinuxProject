@@ -581,7 +581,7 @@ static int bootz_start(cmd_tbl_t *cmdtp, int flag, int argc,
 	int ret;
 	ulong zi_start, zi_end;
 
-	ret = do_bootm_states(cmdtp, flag, argc, argv, BOOTM_STATE_START,
+	ret = do_bootm_states(cmdtp, flag, argc, argv, BOOTM_STATE_START,	// 执行 BOOTM_STATE_START 阶段
 			      images, 1);
 
 	/* Setup Linux kernel zImage entry point */
@@ -589,13 +589,13 @@ static int bootz_start(cmd_tbl_t *cmdtp, int flag, int argc,
 		images->ep = load_addr;
 		debug("*  kernel: default image load address = 0x%08lx\n",
 				load_addr);
-	} else {
-		images->ep = simple_strtoul(argv[0], NULL, 16);
+	} else {	// bootz 命令启动系统的时候就会设置系统在 DRAM 中的存储位置，这个存储位置就是系统镜像的入口点，因此 images->ep=0X80800000
+		images->ep = simple_strtoul(argv[0], NULL, 16);			// 设置系统镜像的入口点
 		debug("*  kernel: cmdline image address = 0x%08lx\n",
 			images->ep);
 	}
-
-	ret = bootz_setup(images->ep, &zi_start, &zi_end);
+	// 会判断当前的系统镜像文件是否为 Linux 的镜像文件，并且会打印出镜像相关信息
+	ret = bootz_setup(images->ep, &zi_start, &zi_end);	// arch/arm/lib/bootm.c
 	if (ret != 0)
 		return 1;
 
@@ -605,7 +605,7 @@ static int bootz_start(cmd_tbl_t *cmdtp, int flag, int argc,
 	 * Handle the BOOTM_STATE_FINDOTHER state ourselves as we do not
 	 * have a header that provide this informaiton.
 	 */
-	if (bootm_find_images(flag, argc, argv))
+	if (bootm_find_images(flag, argc, argv))	// common/bootm.c 查找 ramdisk 和设备树(dtb)文件
 		return 1;
 
 #ifdef CONFIG_SECURE_BOOT
@@ -633,10 +633,10 @@ int do_bootz(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	 * We are doing the BOOTM_STATE_LOADOS state ourselves, so must
 	 * disable interrupts ourselves
 	 */
-	bootm_disable_interrupts();
+	bootm_disable_interrupts();			// 关闭中断
 
-	images.os.os = IH_OS_LINUX;
-	ret = do_bootm_states(cmdtp, flag, argc, argv,
+	images.os.os = IH_OS_LINUX;			// 设置系统镜像为Linux
+	ret = do_bootm_states(cmdtp, flag, argc, argv,			// common/bootm.c 来执行不同的 BOOT 阶段
 			      BOOTM_STATE_OS_PREP | BOOTM_STATE_OS_FAKE_GO |
 			      BOOTM_STATE_OS_GO,
 			      &images, 1);

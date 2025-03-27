@@ -601,7 +601,7 @@ int do_bootm_states(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 	 * Work through the states and see how far we get. We stop on
 	 * any error.
 	 */
-	if (states & BOOTM_STATE_START)
+	if (states & BOOTM_STATE_START)		// 根据不同的 BOOT 状态执行不同的代码段
 		ret = bootm_start(cmdtp, flag, argc, argv);
 
 	if (!ret && (states & BOOTM_STATE_FINDOS))
@@ -654,8 +654,8 @@ int do_bootm_states(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 
 	/* From now on, we need the OS boot function */
 	if (ret)
-		return ret;
-	boot_fn = bootm_os_get_boot_func(images->os.os);
+		return ret;											// images->os.os 表示系统类型IH_OS_LINUX
+	boot_fn = bootm_os_get_boot_func(images->os.os);		// common/bootm_os.c查找系统启动函数,返回值为do_bootm_linux
 	need_boot_fn = states & (BOOTM_STATE_OS_CMDLINE |
 			BOOTM_STATE_OS_BD_T | BOOTM_STATE_OS_PREP |
 			BOOTM_STATE_OS_FAKE_GO | BOOTM_STATE_OS_GO);
@@ -673,9 +673,9 @@ int do_bootm_states(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 		ret = boot_fn(BOOTM_STATE_OS_CMDLINE, argc, argv, images);
 	if (!ret && (states & BOOTM_STATE_OS_BD_T))
 		ret = boot_fn(BOOTM_STATE_OS_BD_T, argc, argv, images);
-	if (!ret && (states & BOOTM_STATE_OS_PREP))
+	if (!ret && (states & BOOTM_STATE_OS_PREP))			// 调用函数do_bootm_linux，进而调用boot_prep_linux来完成具体的处理过程
 		ret = boot_fn(BOOTM_STATE_OS_PREP, argc, argv, images);
-
+	// boot_prep_linux 主要用于处理环境变量bootargs，bootargs 保存着传递给 Linux kernel 的参数
 #ifdef CONFIG_TRACE
 	/* Pretend to run the OS, then run a user command */
 	if (!ret && (states & BOOTM_STATE_OS_FAKE_GO)) {
@@ -696,7 +696,7 @@ int do_bootm_states(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 
 	/* Now run the OS! We hope this doesn't return */
 	if (!ret && (states & BOOTM_STATE_OS_GO))
-		ret = boot_selected_os(argc, argv, BOOTM_STATE_OS_GO,
+		ret = boot_selected_os(argc, argv, BOOTM_STATE_OS_GO,	// common/bootm_os.c 用于启动 Linux 内核
 				images, boot_fn);
 
 	/* Deal with any fallout */

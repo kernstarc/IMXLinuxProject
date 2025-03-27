@@ -84,7 +84,7 @@ static void announce_and_cleanup(int fake)
 #ifdef CONFIG_USB_DEVICE
 	udc_disconnect();
 #endif
-	cleanup_before_linux();
+	cleanup_before_linux();		// 做一些清理工作
 }
 
 static void setup_start_tag (bd_t *bd)
@@ -271,7 +271,7 @@ bool armv7_boot_nonsec(void)
 /* Subcommand: GO */
 static void boot_jump_linux(bootm_headers_t *images, int flag)
 {
-#ifdef CONFIG_ARM64
+#ifdef CONFIG_ARM64			// 64 位 ARM 芯片对应的代码, 而Cortex-A7 是 32 位芯片
 	void (*kernel_entry)(void *fdt_addr, void *res0, void *res1,
 			void *res2);
 	int fake = (flag & BOOTM_STATE_OS_FAKE_GO);
@@ -289,15 +289,15 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 		do_nonsec_virt_switch();
 		kernel_entry(images->ft_addr, NULL, NULL, NULL);
 	}
-#else
-	unsigned long machid = gd->bd->bi_arch_number;
+#else	// machid保存机器ID，如不使用设备树,这个ID会被传递给内核，内核会在自己的ID列表里面查找是否存在与uboot传递进来的machid匹配如果存在就说明 Linux 内核支持这个机器，那么 Linux 就会启动！
+	unsigned long machid = gd->bd->bi_arch_number;	// 如果使用设备树的话这个 machid 就无效了，设备树存有一个“兼容性”这个属性，Linux 内核会比较“兼容性”属性的值(字符串)来查看是否支持这个机器。
 	char *s;
-	void (*kernel_entry)(int zero, int arch, uint params);
+	void (*kernel_entry)(int zero, int arch, uint params);	// 此函数是进入 Linux 内核的。
 	unsigned long r2;
 	int fake = (flag & BOOTM_STATE_OS_FAKE_GO);
-
+	// 第一个参数 zero 同样为 0；第二个参数为机器 ID；第三个参数 ATAGS 或者设备树(DTB)首地址，ATAGS 是传统的方法，用于传递一些命令行信息啥的，如果使用设备树的话就要传递设备树(DTB)。
 	kernel_entry = (void (*)(int, int, uint))images->ep;
-
+	// 函数 kernel_entry 并不是 uboot 定义的，而是 Linux 内核定义的，Linux 内核镜像文件的第一行代码就是函数 kernel_entry，而 images->ep 保存着 Linux内核镜像的起始地址，起始地址保存的正是 Linux 内核第一行代码
 	s = getenv("machid");
 	if (s) {
 		if (strict_strtoul(s, 16, &machid) < 0) {
@@ -310,11 +310,11 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 	debug("## Transferring control to Linux (at address %08lx)" \
 		"...\n", (ulong) kernel_entry);
 	bootstage_mark(BOOTSTAGE_ID_RUN_OS);
-	announce_and_cleanup(fake);
-
-	if (IMAGE_ENABLE_OF_LIBFDT && images->ft_len)
-		r2 = (unsigned long)images->ft_addr;
-	else
+	announce_and_cleanup(fake);		// 打印一些信息并做一些清理工作arch/arm/lib/bootm.c
+	// 为什么要设置 r2 的值呢?Linux 内核一开始是汇编代码，因此函数 kernel_entry 就是个汇编函数。向汇编函数传递参数要使用 r0、r1 和 r2(参数数量不超过 3 个的时候)，所以 r2 寄存器就是函数 kernel_entry 的第三个参数
+	if (IMAGE_ENABLE_OF_LIBFDT && images->ft_len)	
+		r2 = (unsigned long)images->ft_addr;	// 如果使用设备树的话，r2 应该是设备树的起始地址，而设备树地址保存在 images的 ftd_addr 成员变量中
+	else	// 如果不使用设备树的话，r2 应该是 uboot 传递给 Linux 的参数起始地址，也就是环境变量 bootargs 的值
 		r2 = gd->bd->bi_boot_params;
 
 	if (!fake) {
@@ -325,7 +325,7 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 							  0, machid, r2);
 		} else
 #endif
-			kernel_entry(0, machid, r2);
+			kernel_entry(0, machid, r2);	// 调用 kernel_entry 函数进入 Linux 内核，此行将一去不复返，uboot 的使命也就完成了
 	}
 #endif
 }
@@ -373,9 +373,9 @@ int bootz_setup(ulong image, ulong *start, ulong *end)
 {
 	struct zimage_header *zi;
 
-	zi = (struct zimage_header *)map_sysmem(image, 0);
+	zi = (struct zimage_header *)map_sysmem(image, 0);	// 设置镜像首地址
 	if (zi->zi_magic != LINUX_ARM_ZIMAGE_MAGIC) {
-		puts("Bad Linux ARM zImage magic!\n");
+		puts("Bad Linux ARM zImage magic!\n");		// 如果该地址读取不到系统镜像，则报错
 		return 1;
 	}
 
