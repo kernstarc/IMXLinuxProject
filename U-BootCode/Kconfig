@@ -11,6 +11,16 @@ config UBOOTVERSION
 # Allow defaults in arch-specific code to override any given here
 source "arch/Kconfig"
 
+menu "My test menu"
+config MY_TESTMENU
+	bool "This is my test config"
+	default y
+	help
+		This is a empty config, just for test!
+	
+endmenu		# My test menu
+
+
 menu "General setup"
 
 config LOCALVERSION
