@@ -92,25 +92,25 @@ DECLARE_GLOBAL_DATA_PTR;
 	PAD_CTL_PUS_47K_UP  | PAD_CTL_SPEED_LOW |		\
 	PAD_CTL_DSE_80ohm   | PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
 
-#define IOX_SDI IMX_GPIO_NR(5, 10)
-#define IOX_STCP IMX_GPIO_NR(5, 7)
-#define IOX_SHCP IMX_GPIO_NR(5, 11)
-#define IOX_OE IMX_GPIO_NR(5, 8)
+//#define IOX_SDI IMX_GPIO_NR(5, 10)
+//#define IOX_STCP IMX_GPIO_NR(5, 7)
+//#define IOX_SHCP IMX_GPIO_NR(5, 11)
+//#define IOX_OE IMX_GPIO_NR(5, 8)
 
 #define ENET1_RESET IMX_GPIO_NR(5, 7)
 #define ENET2_RESET IMX_GPIO_NR(5, 8)
-
+/*
 static iomux_v3_cfg_t const iox_pads[] = {
-	/* IOX_SDI */
+	// IOX_SDI 
 	MX6_PAD_BOOT_MODE0__GPIO5_IO10 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	/* IOX_SHCP */
+	// IOX_SHCP 
 	MX6_PAD_BOOT_MODE1__GPIO5_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	/* IOX_STCP */
+	// IOX_STCP 
 	MX6_PAD_SNVS_TAMPER7__GPIO5_IO07 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	/* IOX_nOE */
+	// IOX_nOE 
 	MX6_PAD_SNVS_TAMPER8__GPIO5_IO08 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
-
+*/
 /*
  * HDMI_nRST --> Q0
  * ENET1_nRST --> Q1
@@ -151,7 +151,7 @@ static enum qn_func qn_output[8] = {
 	qn_reset, qn_reset, qn_reset, qn_enable, qn_disable, qn_reset,
 	qn_disable, qn_disable
 };
-
+/*
 static void iox74lv_init(void)
 {
 	int i;
@@ -168,9 +168,9 @@ static void iox74lv_init(void)
 
 	gpio_direction_output(IOX_STCP, 0);
 	udelay(500);
-	/*
-	 * shift register will be output to pins
-	 */
+	
+	// shift register will be output to pins
+	 
 	gpio_direction_output(IOX_STCP, 1);
 
 	for (i = 7; i >= 0; i--) {
@@ -182,9 +182,9 @@ static void iox74lv_init(void)
 	}
 	gpio_direction_output(IOX_STCP, 0);
 	udelay(500);
-	/*
-	 * shift register will be output to pins
-	 */
+	
+	//shift register will be output to pins
+	 
 	gpio_direction_output(IOX_STCP, 1);
 };
 
@@ -206,9 +206,9 @@ void iox74lv_set(int index)
 
 	gpio_direction_output(IOX_STCP, 0);
 	udelay(500);
-	/*
-	  * shift register will be output to pins
-	  */
+	
+	// shift register will be output to pins
+	 
 	gpio_direction_output(IOX_STCP, 1);
 
 	for (i = 7; i >= 0; i--) {
@@ -221,12 +221,12 @@ void iox74lv_set(int index)
 
 	gpio_direction_output(IOX_STCP, 0);
 	udelay(500);
-	/*
-	  * shift register will be output to pins
-	  */
+	
+	//  shift register will be output to pins
+	  
 	gpio_direction_output(IOX_STCP, 1);
 };
-
+*/
 
 #ifdef CONFIG_SYS_I2C_MXC
 #define PC MUX_PAD_CTRL(I2C_PAD_CTRL)
@@ -675,14 +675,14 @@ static void setup_iomux_fec(int fec_id)
 						 ARRAY_SIZE(fec1_pads));
         gpio_direction_output(ENET1_RESET, 1);
         gpio_set_value(ENET1_RESET, 0);
-	mdelay(20);
+		mdelay(20);
         gpio_set_value(ENET1_RESET, 1);
 	} else {
 		imx_iomux_v3_setup_multiple_pads(fec2_pads,
 						 ARRAY_SIZE(fec2_pads));
         gpio_direction_output(ENET2_RESET, 1);
         gpio_set_value(ENET2_RESET, 0);
-	mdelay(20);
+		mdelay(20);
         gpio_set_value(ENET2_RESET, 1);
 	}
 	mdelay(150);
@@ -1146,9 +1146,9 @@ int board_init(void)
 
 	imx_iomux_v3_setup_multiple_pads(leds_pads, ARRAY_SIZE(leds_pads));
 
-	imx_iomux_v3_setup_multiple_pads(iox_pads, ARRAY_SIZE(iox_pads));
+	//imx_iomux_v3_setup_multiple_pads(iox_pads, ARRAY_SIZE(iox_pads));
 
-	iox74lv_init();
+	//iox74lv_init();
 
 #ifdef CONFIG_SYS_I2C_MXC
 	setup_i2c(0, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
@@ -1214,7 +1214,7 @@ int checkboard(void)
 	if (is_mx6ull_9x9_evk())
 		puts("Board: MX6ULL 9x9 EVK\n");
 	else
-		puts("Board: I.MX6U ALPHA|MINI\n");
+		puts("Board: MX6ULL ALIENTEK EMMC\n");
 
 	return 0;
 }

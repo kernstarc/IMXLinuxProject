@@ -340,16 +340,19 @@
 #define CONFIG_MII
 
 #define CONFIG_OF_BOARD_SETUP
+// 用于选择使用哪个网口，默认为 1
 #define CONFIG_FEC_ENET_DEV		1		// 指定 uboot 所使用的网口,为 1 的时候使用 ENET2
 
 #if (CONFIG_FEC_ENET_DEV == 0)
 #define IMX_FEC_BASE			ENET_BASE_ADDR	// 为 ENET 接口的寄存器首地址
+// ENET1 的 PHY 地址，默认是 0X2
 #define CONFIG_FEC_MXC_PHYADDR          0x2		// 为网口 PHY 芯片的地址
 /* alientek imx6ull alpha board version <= 2.2, mini board <= 1.8, CONFIG_FEC_MXC_PHYADDR = 0x0 */
 /* #define CONFIG_FEC_MXC_PHYADDR          0x0 */
 #define CONFIG_FEC_XCV_TYPE             RMII
 #elif (CONFIG_FEC_ENET_DEV == 1)
 #define IMX_FEC_BASE			ENET2_BASE_ADDR
+// ENET2 的 PHY 地址
 #define CONFIG_FEC_MXC_PHYADDR		0x1
 #define CONFIG_FEC_XCV_TYPE		RMII
 #endif
