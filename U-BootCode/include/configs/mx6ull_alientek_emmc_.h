@@ -27,12 +27,12 @@
 #endif
 
 #define is_mx6ull_9x9_evk()	CONFIG_IS_ENABLED(TARGET_MX6ULL_9X9_EVK)
-
+// 设置 DRAM 的大小
 #ifdef CONFIG_TARGET_MX6ULL_9X9_EVK
 #define PHYS_SDRAM_SIZE		SZ_256M
 #define CONFIG_BOOTARGS_CMA_SIZE   "cma=96M "
 #else
-#define PHYS_SDRAM_SIZE		SZ_512M
+#define PHYS_SDRAM_SIZE		SZ_512M	// 用的这个
 #define CONFIG_BOOTARGS_CMA_SIZE   ""
 /* DCDC used on 14x14 EVK, no PMIC */
 #undef CONFIG_LDO_BYPASS_CHECK
@@ -47,23 +47,23 @@
 
 #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_DISPLAY_BOARDINFO
+#define CONFIG_DISPLAY_CPUINFO		// uboot 启动的时候可以输出 CPU 信息
+#define CONFIG_DISPLAY_BOARDINFO	// uboot 启动的时候可以输出板子信息
 
 /* Size of malloc() pool */
-#define CONFIG_SYS_MALLOC_LEN		(16 * SZ_1M)
+#define CONFIG_SYS_MALLOC_LEN		(16 * SZ_1M)	// 为 malloc 内存池大小，这里设置为 16MB
 
-#define CONFIG_BOARD_EARLY_INIT_F
-#define CONFIG_BOARD_LATE_INIT
-
+#define CONFIG_BOARD_EARLY_INIT_F	// 这样 board_init_f 函数就会调用board_early_init_f 函数
+#define CONFIG_BOARD_LATE_INIT		// board_init_r 函数就会调用board_late_init 函数
+// 使能 I.MX6ULL 的串口功能
 #define CONFIG_MXC_UART
 #define CONFIG_MXC_UART_BASE		UART1_BASE
 
 /* MMC Configs */
 #ifdef CONFIG_FSL_USDHC
-#define CONFIG_SYS_FSL_ESDHC_ADDR	USDHC2_BASE_ADDR
+#define CONFIG_SYS_FSL_ESDHC_ADDR	USDHC2_BASE_ADDR	// 为 EMMC 所使用接口的寄存器基地址，也就是 USDHC2 的基地址
 
-/* NAND pin conflicts with usdhc2 */
+/* NAND pin conflicts with usdhc2 */	// 跟 NAND 相关的宏
 #ifdef CONFIG_SYS_USE_NAND
 #define CONFIG_SYS_FSL_USDHC_NUM	1
 #else
@@ -71,7 +71,7 @@
 #endif
 #endif
 
-/* I2C configs */
+/* I2C configs */	// 和 I2C 有关的宏定义，用于控制使能哪个 I2C，I2C 的速度为多少
 #define CONFIG_CMD_I2C
 #ifdef CONFIG_CMD_I2C
 #define CONFIG_SYS_I2C
@@ -88,13 +88,13 @@
 #endif
 
 #define CONFIG_SYS_MMC_IMG_LOAD_PART	1
-
+// NAND 的分区设置
 #ifdef CONFIG_SYS_USE_NAND
 #define CONFIG_MFG_NAND_PARTITION "mtdparts=gpmi-nand:4m(u-boot),128k(env),1m(logo),1m(dtb),8m(kernel),-(rootfs) "
 #else
 #define CONFIG_MFG_NAND_PARTITION ""
 #endif
-
+// 此宏会设置 bootargs
 #define CONFIG_MFG_ENV_SETTINGS \
 	"mfgtool_args=setenv bootargs console=${console},${baudrate} " \
 	    CONFIG_BOOTARGS_CMA_SIZE \
@@ -302,7 +302,7 @@
 
 #define CONFIG_ENV_SIZE			SZ_8K
 #if defined(CONFIG_ENV_IS_IN_MMC)
-#define CONFIG_ENV_OFFSET		(12 * SZ_64K)
+#define CONFIG_ENV_OFFSET		(12 * SZ_64K)	// 环境变量偏移地址
 #elif defined(CONFIG_ENV_IS_IN_SPI_FLASH)
 #define CONFIG_ENV_OFFSET		(768 * 1024)
 #define CONFIG_ENV_SECT_SIZE		(64 * 1024)
@@ -340,11 +340,11 @@
 #define CONFIG_MII
 
 #define CONFIG_OF_BOARD_SETUP
-#define CONFIG_FEC_ENET_DEV		1
+#define CONFIG_FEC_ENET_DEV		1		// 指定 uboot 所使用的网口,为 1 的时候使用 ENET2
 
 #if (CONFIG_FEC_ENET_DEV == 0)
-#define IMX_FEC_BASE			ENET_BASE_ADDR
-#define CONFIG_FEC_MXC_PHYADDR          0x2
+#define IMX_FEC_BASE			ENET_BASE_ADDR	// 为 ENET 接口的寄存器首地址
+#define CONFIG_FEC_MXC_PHYADDR          0x2		// 为网口 PHY 芯片的地址
 /* alientek imx6ull alpha board version <= 2.2, mini board <= 1.8, CONFIG_FEC_MXC_PHYADDR = 0x0 */
 /* #define CONFIG_FEC_MXC_PHYADDR          0x0 */
 #define CONFIG_FEC_XCV_TYPE             RMII
@@ -367,7 +367,7 @@
 #ifdef CONFIG_VIDEO
 #define CONFIG_CFB_CONSOLE
 #define CONFIG_VIDEO_MXS
-/*#define CONFIG_VIDEO_LOGO*/
+/*#define CONFIG_VIDEO_LOGO*/	// 用于开启 LCD
 #define CONFIG_VIDEO_SW_CURSOR
 #define CONFIG_VGA_AS_SINGLE_DEVICE
 #define CONFIG_SYS_CONSOLE_IS_IN_ENV
