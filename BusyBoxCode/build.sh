@@ -11,8 +11,8 @@
 #make menuconfig	# 手动图形化配置选项
 
 # 4.编译BusyBox,指定编译结果存放路径
-make -j2
-make install CONFIG_PREFIX=/home/starc/share/work/imx6ull-code/BusyBoxCode/build
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j2
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- install CONFIG_PREFIX=./rootfs
 
 
 
