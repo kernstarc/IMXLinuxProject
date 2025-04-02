@@ -11,31 +11,12 @@
 #include <dt-bindings/input/input.h>
 #include "imx6ull.dtsi"
 
-#define ATK_CAMERA_ON 1
-#define ATK_CAMERA_OFF 0
-
 / {
 	model = "Freescale i.MX6 ULL 14x14 EVK Board";
 	compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ull";
 
 	chosen {
 		stdout-path = &uart1;
-	};
-
-	dht11 {
-		compatible = "alientek, dht11";
-		pinctrl-names = "default";
-                pinctrl-0 = <&pinctrl_dht11>;
-		dht11-gpio = <&gpio1 1 GPIO_ACTIVE_LOW>;
-		status = "okay";
-	};
-
-	ds18b20 {
-		compatible = "alientek, ds18b20";
-		pinctrl-names = "default";
-                pinctrl-0 = <&pinctrl_ds18b20>;
-		ds18b20-gpio = <&gpio1 1 GPIO_ACTIVE_LOW>;
-		status = "okay";
 	};
 
 	memory {
@@ -112,14 +93,14 @@
 
 		led1{
 			label = "sys-led";
-			gpios = <&gpio1 3 GPIO_ACTIVE_LOW>;
+			/* gpios = <&gpio1 3 GPIO_ACTIVE_LOW>; */
 			linux,default-trigger = "heartbeat";
 			default-state = "on";
 		};
 
 		beep{
 			label = "beep";
-			gpios = <&gpio5 1 GPIO_ACTIVE_LOW>;
+			/* gpios = <&gpio5 1 GPIO_ACTIVE_LOW>; */
 			default-state = "off";
 		};
 	};
@@ -145,7 +126,7 @@
 			   "fsl,imx-audio-wm8960";
 		model = "wm8960-audio";
 		cpu-dai = <&sai2>;
-		audio-codec = <&codec &codec1>;
+		audio-codec = <&codec>;
 		asrc-controller = <&asrc>;
 		codec-master;
 		gpr = <&gpr 4 0x100000 0x100000>;
@@ -181,9 +162,11 @@
 		compatible = "spi-gpio";
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_spi4>;
+		pinctrl-assert-gpios = <&gpio5 8 GPIO_ACTIVE_LOW>;
 		status = "disabled";
 		gpio-sck = <&gpio5 11 0>;
 		gpio-mosi = <&gpio5 10 0>;
+		cs-gpios = <&gpio5 7 0>;
 		num-chipselects = <1>;
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -206,6 +189,51 @@
                 #reset-cells = <0>;
                 status = "disabled";
         };
+
+
+      alphaled {
+			#address-cells = <1>; 
+			#size-cells = <1>; 
+			compatible = "atkalpha-led"; 
+			status = "okay"; 
+			reg = < 0X020C406C 0X04 	/* CCM_CCGR1_BASE */ 
+					0X020E0068 0X04 			/* SW_MUX_GPIO1_IO03_BASE */ 
+					0X020E02F4 0X04 			/* SW_PAD_GPIO1_IO03_BASE */ 
+					0X0209C000 0X04 			/* GPIO1_DR_BASE */ 
+					0X0209C004 0X04 >; 			/* GPIO1_GDIR_BASE */
+       };
+
+		gpioled {
+       		#address-cells = <1>; 
+			#size-cells = <1>; 
+			compatible = "atkalpha-gpioled"; 
+			pinctrl-names = "default"; 
+			pinctrl-0 = <&pinctrl_led>; 
+			led-gpio = <&gpio1 3 GPIO_ACTIVE_LOW>; 
+			status = "okay";   
+		};
+
+		beep {
+			#address-cells = <1>; 
+			#size-cells = <1>; 
+			compatible = "atkalpha-beep"; 
+			pinctrl-names = "default"; 
+			pinctrl-0 = <&pinctrl_beep>; 
+			beep-gpio = <&gpio5 1 GPIO_ACTIVE_HIGH>; 
+			status = "okay";
+		};
+
+		key { 
+			#address-cells = <1>; 
+			#size-cells = <1>; 
+			compatible = "atkalpha-key"; 
+			pinctrl-names = "default"; 
+			pinctrl-0 = <&pinctrl_key>; 
+			key-gpio = <&gpio1 18 GPIO_ACTIVE_LOW>; /* KEY0 */ 
+			status = "okay"; 
+		};
+
+
 };
 
 &cpu0 {
@@ -223,8 +251,8 @@
 	status = "okay";
 
 	port {
-		csi_ep: endpoint {
-			remote-endpoint = <&camera_ep>;
+		csi1_ep: endpoint {
+			remote-endpoint = <&ov5640_ep>;
 		};
 	};
 };
@@ -270,7 +298,7 @@
 
 		ethphy0: ethernet-phy@2 {
 			compatible = "ethernet-phy-ieee802.3-c22";
-			reg = <2>;
+			reg = <0>;
 		};
 
 		ethphy1: ethernet-phy@1 {
@@ -308,20 +336,10 @@
 	pinctrl-0 = <&pinctrl_i2c1>;
 	status = "okay";
 
-        codec: wm8960@1a {
-                compatible = "wlf,wm8960";
-                reg = <0x1a>;
-                clocks = <&clks IMX6UL_CLK_SAI2>;
-                clock-names = "mclk";
-                wlf,shared-lrclk;
-        };
-
-
 	mag3110@0e {
 		compatible = "fsl,mag3110";
 		reg = <0x0e>;
 		position = <2>;
-		status = "disabled";
 	};
 
 	ap3216c@1e {
@@ -336,7 +354,7 @@
 	pinctrl-0 = <&pinctrl_i2c2>;
 	status = "okay";
 
-	codec1: wm8960@1a {
+	codec: wm8960@1a {
 		compatible = "wlf,wm8960";
 		reg = <0x1a>;
 		clocks = <&clks IMX6UL_CLK_SAI2>;
@@ -344,7 +362,6 @@
 		wlf,shared-lrclk;
 	};
 
-#if ATK_CAMERA_ON
 	ov5640: ov5640@3c {
 		compatible = "ovti,ov5640";
 		reg = <0x3c>;
@@ -360,58 +377,12 @@
 		mclk_source = <0>;
 		status = "okay";
 		port {
-			camera_ep: endpoint {
-				remote-endpoint = <&csi_ep>;
+			ov5640_ep: endpoint {
+				remote-endpoint = <&csi1_ep>;
 			};
 		};
 	};
-#endif
 
-#if ATK_CAMERA_OFF
-        ov2640: camera@0x30 {
-                compatible = "ovti,ov2640";
-                reg = <0x30>;
-                status = "okay";
-
-                pinctrl-names = "default";
-                pinctrl-0 = <&pinctrl_csi1
-                             &csi_pwn_rst>;
-                resetb = <&gpio1 2 GPIO_ACTIVE_LOW>;
-                pwdn = <&gpio1 4 GPIO_ACTIVE_HIGH>;
-                clocks = <&clks IMX6UL_CLK_CSI>;
-                clock-names = "xvclk";
-
-                port {
-                        camera_ep: endpoint {
-                                remote-endpoint = <&csi_ep>;
-				bus-width = <8>;
-                        };
-                };
-        };
-#endif
-
-#if ATK_CAMERA_OFF
-        ov7725: camera@0x21 {
-                compatible = "ovti,ov772x","ovti,ov7725";
-                reg = <0x21>;
-                status = "okay";
-                pinctrl-names = "default";
-                pinctrl-0 = <&pinctrl_csi1
-                             &csi_pwn_rst>;
-                resetb = <&gpio1 2 GPIO_ACTIVE_LOW>;
-                pwdn = <&gpio1 4 GPIO_ACTIVE_HIGH>;
-                clocks = <&clks IMX6UL_CLK_CSI>;
-                clock-frequency = <20000000>;
-                clock-names = "mclk";
-
-                port {
-                        camera_ep: endpoint {
-                                remote-endpoint = <&csi>;
-				bus-width = <8>;
-                        };
-                };
-        };
-#endif
         edt-ft5x06@38 {
 		compatible = "edt,edt-ft5306", "edt,edt-ft5x06";
 		pinctrl-names = "default";
@@ -427,8 +398,8 @@
 	};
 
         goodix_ts@5d {
-                compatible = "goodix,gt9xx", "goodix,gt1151";
-                reg = <0x14>;
+                compatible = "goodix,gt9xx";
+                reg = <0x5d>;
                 status = "okay";
                 interrupt-parent = <&gpio1>;
                 interrupts = <9 0>;
@@ -444,6 +415,7 @@
                 pinctrl-0 = <&pinctrl_sii902x>;
                 interrupt-parent = <&gpio1>;
                 interrupts = <9 IRQ_TYPE_EDGE_FALLING>;
+		irq-gpios = <&gpio1 9 GPIO_ACTIVE_LOW>;
                 mode_str = "1280x720M@60";
                 bits-per-pixel = <16>;
                 resets = <&sii902x_reset>;
@@ -464,34 +436,40 @@
 			>;
 		};
 
-		pinctrl_csi1: csi1grp {
+		pinctrl_key: keygrp {
 			fsl,pins = <
-				MX6UL_PAD_CSI_MCLK__CSI_MCLK		0x1b088
-				MX6UL_PAD_CSI_PIXCLK__CSI_PIXCLK	0x1b088
-				MX6UL_PAD_CSI_VSYNC__CSI_VSYNC		0x1b088
-				MX6UL_PAD_CSI_HSYNC__CSI_HSYNC		0x1b088
-				MX6UL_PAD_CSI_DATA00__CSI_DATA02	0x1b088
-				MX6UL_PAD_CSI_DATA01__CSI_DATA03	0x1b088
-				MX6UL_PAD_CSI_DATA02__CSI_DATA04	0x1b088
-				MX6UL_PAD_CSI_DATA03__CSI_DATA05	0x1b088
-				MX6UL_PAD_CSI_DATA04__CSI_DATA06	0x1b088
-				MX6UL_PAD_CSI_DATA05__CSI_DATA07	0x1b088
-				MX6UL_PAD_CSI_DATA06__CSI_DATA08	0x1b088
-				MX6UL_PAD_CSI_DATA07__CSI_DATA09	0x1b088
+				MX6UL_PAD_UART1_CTS_B__GPIO1_IO18 0xF080 /* KEY0 */ 
 			>;
 		};
 
-                pinctrl_ds18b20: 18b20 {
-                        fsl,pins = <
-                                MX6UL_PAD_GPIO1_IO01__GPIO1_IO01        0x17059
-                        >;
-                };
+		pinctrl_led: ledgrp {
+			fsl,pins = <
+				MX6UL_PAD_GPIO1_IO03__GPIO1_IO03 0x10B0 /* LED0 */ 
+			>;
+		};
 
-                pinctrl_dht11: dht11 {
-                        fsl,pins = <
-                                MX6UL_PAD_GPIO1_IO01__GPIO1_IO01        0x17059
-                        >;
-                };
+		pinctrl_beep: beepgrp {
+			fsl,pins = <
+				MX6ULL_PAD_SNVS_TAMPER1__GPIO5_IO01 0x10B0 		/* beep */
+			>;
+		};
+		
+		pinctrl_csi1: csi1grp {
+			fsl,pins = <
+				MX6UL_PAD_CSI_MCLK__CSI_MCLK		0x1b008
+				MX6UL_PAD_CSI_PIXCLK__CSI_PIXCLK	0x1b008
+				MX6UL_PAD_CSI_VSYNC__CSI_VSYNC		0x1b008
+				MX6UL_PAD_CSI_HSYNC__CSI_HSYNC		0x1b008
+				MX6UL_PAD_CSI_DATA00__CSI_DATA02	0x1b008
+				MX6UL_PAD_CSI_DATA01__CSI_DATA03	0x1b008
+				MX6UL_PAD_CSI_DATA02__CSI_DATA04	0x1b008
+				MX6UL_PAD_CSI_DATA03__CSI_DATA05	0x1b008
+				MX6UL_PAD_CSI_DATA04__CSI_DATA06	0x1b008
+				MX6UL_PAD_CSI_DATA05__CSI_DATA07	0x1b008
+				MX6UL_PAD_CSI_DATA06__CSI_DATA08	0x1b008
+				MX6UL_PAD_CSI_DATA07__CSI_DATA09	0x1b008
+			>;
+		};
 
 		pinctrl_enet1: enet1grp {
 			fsl,pins = <
@@ -532,7 +510,7 @@
 
 		pinctrl_gpio_leds: gpio-leds {
 			fsl,pins = <
-				MX6UL_PAD_GPIO1_IO03__GPIO1_IO03	0x17059
+				 /* MX6UL_PAD_GPIO1_IO03__GPIO1_IO03	0x17059 */
 			>;
 		};
 
@@ -572,39 +550,39 @@
 
 		pinctrl_lcdif_dat: lcdifdatgrp {
 			fsl,pins = <
-				MX6UL_PAD_LCD_DATA00__LCDIF_DATA00  0x79
-				MX6UL_PAD_LCD_DATA01__LCDIF_DATA01  0x79
-				MX6UL_PAD_LCD_DATA02__LCDIF_DATA02  0x79
-				MX6UL_PAD_LCD_DATA03__LCDIF_DATA03  0x79
-				MX6UL_PAD_LCD_DATA04__LCDIF_DATA04  0x79
-				MX6UL_PAD_LCD_DATA05__LCDIF_DATA05  0x79
-				MX6UL_PAD_LCD_DATA06__LCDIF_DATA06  0x79
-				MX6UL_PAD_LCD_DATA07__LCDIF_DATA07  0x79
-				MX6UL_PAD_LCD_DATA08__LCDIF_DATA08  0x79
-				MX6UL_PAD_LCD_DATA09__LCDIF_DATA09  0x79
-				MX6UL_PAD_LCD_DATA10__LCDIF_DATA10  0x79
-				MX6UL_PAD_LCD_DATA11__LCDIF_DATA11  0x79
-				MX6UL_PAD_LCD_DATA12__LCDIF_DATA12  0x79
-				MX6UL_PAD_LCD_DATA13__LCDIF_DATA13  0x79
-				MX6UL_PAD_LCD_DATA14__LCDIF_DATA14  0x79
-				MX6UL_PAD_LCD_DATA15__LCDIF_DATA15  0x79
-				MX6UL_PAD_LCD_DATA16__LCDIF_DATA16  0x79
-				MX6UL_PAD_LCD_DATA17__LCDIF_DATA17  0x79
-				MX6UL_PAD_LCD_DATA18__LCDIF_DATA18  0x79
-				MX6UL_PAD_LCD_DATA19__LCDIF_DATA19  0x79
-				MX6UL_PAD_LCD_DATA20__LCDIF_DATA20  0x79
-				MX6UL_PAD_LCD_DATA21__LCDIF_DATA21  0x79
-				MX6UL_PAD_LCD_DATA22__LCDIF_DATA22  0x79
-				MX6UL_PAD_LCD_DATA23__LCDIF_DATA23  0x79
+				MX6UL_PAD_LCD_DATA00__LCDIF_DATA00  0x49
+				MX6UL_PAD_LCD_DATA01__LCDIF_DATA01  0x49
+				MX6UL_PAD_LCD_DATA02__LCDIF_DATA02  0x49
+				MX6UL_PAD_LCD_DATA03__LCDIF_DATA03  0x49
+				MX6UL_PAD_LCD_DATA04__LCDIF_DATA04  0x49
+				MX6UL_PAD_LCD_DATA05__LCDIF_DATA05  0x49
+				MX6UL_PAD_LCD_DATA06__LCDIF_DATA06  0x49
+				MX6UL_PAD_LCD_DATA07__LCDIF_DATA07  0x51
+				MX6UL_PAD_LCD_DATA08__LCDIF_DATA08  0x49
+				MX6UL_PAD_LCD_DATA09__LCDIF_DATA09  0x49
+				MX6UL_PAD_LCD_DATA10__LCDIF_DATA10  0x49
+				MX6UL_PAD_LCD_DATA11__LCDIF_DATA11  0x49
+				MX6UL_PAD_LCD_DATA12__LCDIF_DATA12  0x49
+				MX6UL_PAD_LCD_DATA13__LCDIF_DATA13  0x49
+				MX6UL_PAD_LCD_DATA14__LCDIF_DATA14  0x49
+				MX6UL_PAD_LCD_DATA15__LCDIF_DATA15  0x51
+				MX6UL_PAD_LCD_DATA16__LCDIF_DATA16  0x49
+				MX6UL_PAD_LCD_DATA17__LCDIF_DATA17  0x49
+				MX6UL_PAD_LCD_DATA18__LCDIF_DATA18  0x49
+				MX6UL_PAD_LCD_DATA19__LCDIF_DATA19  0x49
+				MX6UL_PAD_LCD_DATA20__LCDIF_DATA20  0x49
+				MX6UL_PAD_LCD_DATA21__LCDIF_DATA21  0x49
+				MX6UL_PAD_LCD_DATA22__LCDIF_DATA22  0x49
+				MX6UL_PAD_LCD_DATA23__LCDIF_DATA23  0x51
 			>;
 		};
 
 		pinctrl_lcdif_ctrl: lcdifctrlgrp {
 			fsl,pins = <
-				MX6UL_PAD_LCD_CLK__LCDIF_CLK	    0x79
-				MX6UL_PAD_LCD_ENABLE__LCDIF_ENABLE  0x79
-				MX6UL_PAD_LCD_HSYNC__LCDIF_HSYNC    0x79
-				MX6UL_PAD_LCD_VSYNC__LCDIF_VSYNC    0x79
+				MX6UL_PAD_LCD_CLK__LCDIF_CLK	    0x49
+				MX6UL_PAD_LCD_ENABLE__LCDIF_ENABLE  0x49
+				MX6UL_PAD_LCD_HSYNC__LCDIF_HSYNC    0x49
+				MX6UL_PAD_LCD_VSYNC__LCDIF_VSYNC    0x49
 			>;
 		};
 
@@ -645,7 +623,7 @@
 			fsl,pins = <
 				MX6UL_PAD_GPIO1_IO01__GPIO1_IO01	0xb0
 				MX6UL_PAD_GPIO1_IO02__GPIO1_IO02	0xb0
-				MX6UL_PAD_GPIO1_IO03__GPIO1_IO03	0xb0
+			/*	MX6UL_PAD_GPIO1_IO03__GPIO1_IO03	0xb0  */
 				MX6UL_PAD_GPIO1_IO04__GPIO1_IO04	0xb0
 			>;
 		};
@@ -779,7 +757,7 @@
 
 		ts_int_pin: ts_int_pin_mux {
 			fsl,pins = <
-				MX6UL_PAD_GPIO1_IO09__GPIO1_IO09	0x79
+				MX6UL_PAD_GPIO1_IO09__GPIO1_IO09	0x49
 			>;
 		};
 
@@ -811,7 +789,7 @@
 		pinctrl_lcdif_reset: lcdifresetgrp {
                         fsl,pins = <
                                 /* used for lcd reset */
-                                MX6ULL_PAD_SNVS_TAMPER9__GPIO5_IO09  0x79
+                                MX6ULL_PAD_SNVS_TAMPER9__GPIO5_IO09  0x49
                         >;
                 };
 
@@ -819,8 +797,8 @@
                         fsl,pins = <
                                 MX6ULL_PAD_BOOT_MODE0__GPIO5_IO10        0x70a1
                                 MX6ULL_PAD_BOOT_MODE1__GPIO5_IO11        0x70a1
-                              
-							  
+                                MX6ULL_PAD_SNVS_TAMPER7__GPIO5_IO07      0x70a1
+                                MX6ULL_PAD_SNVS_TAMPER8__GPIO5_IO08      0x80000000
                         >;
                 };
 
@@ -844,31 +822,13 @@
 
 		ts_reset_pin: ts_reset_pin_mux {
 			fsl,pins = <
-				MX6ULL_PAD_SNVS_TAMPER9__GPIO5_IO09	0x79
+				MX6ULL_PAD_SNVS_TAMPER9__GPIO5_IO09	0x49
 			>;
 		};
 
-
-		/*enet1 reset zuozhongkai*/
-		pinctrl_enet1_reset: enet1resetgrp {
+		pinctrl_beep_: beep {
 			fsl,pins = <
-				/* used for enet1 reset */
-				MX6ULL_PAD_SNVS_TAMPER7__GPIO5_IO07 0x10B0 
-			>;
-		};
-
-		/*enet2 reset zuozhongkai*/
-		pinctrl_enet2_reset: enet2resetgrp {
-			fsl,pins = <
-				/* used for enet2 reset */
-				MX6ULL_PAD_SNVS_TAMPER8__GPIO5_IO08 0x10B0 
-			>;
-		};
-
-
-		pinctrl_beep: beep {
-			fsl,pins = <
-				MX6ULL_PAD_SNVS_TAMPER1__GPIO5_IO01	0x17059
+				/*MX6ULL_PAD_SNVS_TAMPER1__GPIO5_IO01	0x17059 */
 			>;
 		};
         };
@@ -902,7 +862,8 @@
                         hsync-active = <0>;
                         vsync-active = <0>;
                         de-active = <1>;
-                        pixelclk-active = <1>;
+			/* rgb to hdmi: pixelclk-ative should be set to 1 */
+                        pixelclk-active = <0>;
                         };
                 };
         };
@@ -947,14 +908,10 @@
 	status = "okay";
 };
 
-&snvs_poweroff {
-	status = "disabled";
-};
-
 &tsc {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_tsc>;
-	xnur-gpio = <&gpio1 3 GPIO_ACTIVE_LOW>;
+/*	xnur-gpio = <&gpio1 3 GPIO_ACTIVE_LOW>;  */
 	measure-delay-time = <0xffff>;
 	pre-charge-time = <0xfff>;
 	status = "disabled";
@@ -1018,13 +975,9 @@
 };
 
 &usdhc2 {
-	pinctrl-names = "default", "state_100mhz", "state_200mhz";
-	pinctrl-0 = <&pinctrl_usdhc2_8bit>;
-	pinctrl-1 = <&pinctrl_usdhc2_8bit_100mhz>;
-	pinctrl-2 = <&pinctrl_usdhc2_8bit_200mhz>;
-	bus-width = <8>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_usdhc2>;
 	non-removable;
-	no-1-8-v;
 	status = "okay";
 };
 
